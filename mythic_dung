@@ -1,0 +1,73 @@
+import requests
+
+
+ROSTER = [
+    "Dosantos",
+    "Jolrael",
+    "Kreshen",
+    "Rbdragon",
+    "Skellyangely",
+    "Wepa",
+    "Kisersosa",
+    "Nukestrong",
+    "Pigeonwat",
+    "Ronfaure",
+    "Vilton",
+    "Crystellis",
+    "Disir",
+    "Deankeaton",
+    "Cademyr",
+    "Dunbasper",
+    "Irinji",
+    "Paaz",
+    "Uyiu",
+]
+
+REALM = "kiljaeden"
+
+REGION = "us"
+
+FIELDS = "mythic_plus_weekly_highest_level_runs"
+
+
+def req(reg, rlm, nm, fld):
+    payload = {"region": reg, "realm": rlm, "name": nm, "fields": fld}
+    r = requests.get(
+        "https://raider.io/api/v1/characters/profile", params=payload
+    ).json()
+    return r
+
+
+def parse_results(data):
+    mythic_level = 10
+    dungeon_name = ""
+    date = ""
+    ks_upgrades = ""
+    for dungeon in data["mythic_plus_weekly_highest_level_runs"]:
+        if mythic_level <= dungeon["mythic_level"]:
+            dungeon_name = dungeon["short_name"]
+            mythic_level = dungeon["mythic_level"]
+            date = dungeon["completed_at"]
+            ks_upgrades = dungeon["num_keystone_upgrades"]
+        else:
+            pass
+    if dungeon_name != "":
+        return mythic_level, dungeon_name, ks_upgrades, date
+    else:
+        return "N/A", "N/A", "N/A", "N/A"
+
+
+def store_results():
+    for name in ROSTER:
+        result = req(REGION, REALM, name, FIELDS)
+        data = parse_results(result)
+        mythic_data = "{} - {} \n".format(name, data)
+        with open("mythic_raw.txt", "a") as f:
+            f.write(mythic_data)
+
+
+def print_results():
+    pass
+
+
+store_results()
